@@ -118,15 +118,19 @@ AND YEAR(HireDate) >= 2000
 GROUP BY DepartmentID;
 
 -- Problem 15.
+--DROP TABLE NewTB
 SELECT *
 INTO NewTB
 FROM Employees
-WHERE Salary > 30000
-      AND ManagerID <> 42;
+WHERE Salary > 30000;
+
+DELETE FROM NewTB WHERE ManagerID = 42;
+
 UPDATE NewTB
   SET 
       Salary+=5000
 WHERE DepartmentID = 1;
+
 SELECT DepartmentID, 
        AVG(Salary)
 FROM NewTB

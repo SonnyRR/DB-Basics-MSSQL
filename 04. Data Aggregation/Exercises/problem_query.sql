@@ -102,7 +102,18 @@ ORDER BY DepositGroup DESC,
 
 -- Problem 12.
 
-USE SoftUni;
+SELECT SUM(k.Diff) [Diff]
+FROM
+(
+    SELECT wd.DepositAmount -
+    (
+        SELECT w.DepositAmount
+        FROM WizzardDeposits AS w
+        WHERE w.Id = wd.Id + 1
+    ) AS Diff
+    FROM WizzardDeposits AS wd
+) AS k;
+
 -- Problem 13.
 SELECT DepartmentID, 
        SUM(Salary) [TotalSalary]
@@ -123,14 +134,12 @@ SELECT *
 INTO NewTB
 FROM Employees
 WHERE Salary > 30000;
-
-DELETE FROM NewTB WHERE ManagerID = 42;
-
+DELETE FROM NewTB
+WHERE ManagerID = 42;
 UPDATE NewTB
   SET 
       Salary+=5000
 WHERE DepartmentID = 1;
-
 SELECT DepartmentID, 
        AVG(Salary)
 FROM NewTB
@@ -149,3 +158,8 @@ FROM Employees
 WHERE ManagerID IS NULL;
 
 -- Problem 19.
+USE SoftUni
+
+SELECT DepartmentID, Salary FROM Employees
+GROUP BY DepartmentID, Salary
+ORDER BY Salary

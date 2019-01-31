@@ -118,3 +118,10 @@ VALUES ('John', NULL),
        ('Greta', 101)
 
 -- END --
+
+-- Problem 09.
+SELECT MountainRange, PeakName, Elevation FROM Mountains
+LEFT JOIN Peaks ON MountainId = Mountains.Id
+WHERE MountainRange = 'Rila'
+ORDER BY Elevation DESC
+-- END --

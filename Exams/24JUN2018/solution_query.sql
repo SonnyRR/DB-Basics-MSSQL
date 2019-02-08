@@ -136,3 +136,67 @@ GROUP BY c.Name
 ORDER BY Hotels DESC, c.Name
 -- END OF 08. --
 
+-- 09. --
+SELECT r.Id, r.Price, h.Name, c.Name
+FROM Rooms [r]
+	JOIN Hotels [h] ON h.Id = r.HotelId
+	JOIN Cities [c] ON c.Id = h.CityId
+WHERE r.Type = 'First Class'
+ORDER BY r.Price DESC, r.Id
+-- END OF 09. --
+
+-- 10. --
+SELECT a.Id [AccountId] 
+    ,CONCAT(a.FirstName, ' ', a.LastName) [FullName] 
+	,MAX(DATEDIFF(DAY, t.ArrivalDate, t.ReturnDate)) [LongestTrip]
+	,MIN(DATEDIFF(DAY, t.ArrivalDate, t.ReturnDate)) [ShortestTrip]
+FROM Accounts [a]
+	JOIN AccountsTrips [ac] ON a.Id = ac.AccountId AND a.MiddleName IS NULL
+	JOIN Trips [t] ON t.Id = ac.TripId AND t.CancelDate IS NULL
+GROUP BY a.Id, CONCAT(a.FirstName, ' ', a.LastName)
+ORDER BY LongestTrip DESC, AccountId
+-- END OF 10. --
+
+-- 11. --
+SELECT TOP (5) c.Id, Name [City], c.CountryCode [Country], COUNT(a.Id) [Accounts]
+FROM Cities [c]
+	JOIN Accounts [a] ON a.CityId = c.Id
+GROUP BY c.Id, c.Name, c.CountryCode
+ORDER BY COUNT(a.Id) DESC
+-- END OF 11. --
+
+-- 12. --
+SELECT a.Id, a.Email, c.Name [City], COUNT(c.Name) [Trips] 
+FROM Accounts [a]
+	JOIN AccountsTrips [ac] ON ac.AccountId = a.Id
+	JOIN Trips [t] ON t.Id = ac.TripId
+	JOIN Rooms [r] ON r.Id = t.RoomId
+	JOIN Hotels[h] ON h.Id = r.HotelId
+	JOIN Cities[c] ON h.CityId = c.Id AND a.CityId = h.CityId
+GROUP BY a.Id, a.Email, c.Name
+ORDER BY [Trips] DESC, a.Id
+-- END OF 12. --
+
+-- 13. --
+SELECT TOP(10) c.Id, c.Name, SUM(h.BaseRate + r.Price) [Total Revenue], COUNT(t.Id) [Trips]
+FROM Cities [c]
+	JOIN Hotels [h] ON c.Id = h.CityId
+	JOIN Rooms [r] ON h.Id = r.HotelId
+	JOIN Trips [t] ON r.Id = t.RoomId AND YEAR(t.BookDate) = DATEPART(YEAR, '2016-01-01')
+GROUP BY c.Id, c.Name
+ORDER BY [Total Revenue] DESC, Trips DESC
+-- END OF 13. --
+
+-- 14. --
+SELECT at.TripId, h.[Name] [HotelName], r.[Type] [RoomType],
+	CASE
+		WHEN t.CancelDate IS NULL THEN SUM(h.BaseRate + r.Price)
+		ELSE 0
+	END [Revenue]
+FROM Trips [t]
+	JOIN Rooms [r] ON r.Id = t.RoomId
+	JOIN Hotels [h] ON h.Id = r.HotelId
+	JOIN AccountsTrips [at] ON t.Id = at.TripId
+GROUP BY at.TripId, h.Name, r.Type, t.CancelDate
+ORDER BY r.[Type], at.TripId
+-- END OF 14. --

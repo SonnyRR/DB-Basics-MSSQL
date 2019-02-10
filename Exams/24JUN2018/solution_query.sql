@@ -200,3 +200,100 @@ FROM Trips [t]
 GROUP BY at.TripId, h.Name, r.Type, t.CancelDate
 ORDER BY r.[Type], at.TripId
 -- END OF 14. --
+
+-- 15. --
+WITH MostTravelers_CTE (Id, Email, CountryCode, Trips, [Rank])
+AS
+	(SELECT a.Id
+		, a.Email
+		, c.CountryCode
+		, COUNT(*) [Trips]
+		, DENSE_RANK() OVER (PARTITION BY c.CountryCode ORDER BY COUNT(*) DESC, a.Id) [Rank]
+	FROM Accounts [a]
+		JOIN AccountsTrips [atr] ON a.Id = atr.AccountId
+		JOIN Trips [t] ON atr.TripId = t.Id
+		JOIN Rooms [r] ON t.RoomId = r.Id
+		JOIN Hotels [h] ON r.HotelId = h.Id
+		JOIN Cities [c] ON h.CityId = c.Id
+	GROUP BY a.Id, a.Email, c.CountryCode)
+
+SELECT Id, Email, CountryCode, Trips FROM MostTravelers_CTE 
+WHERE [Rank] = 1
+ORDER BY Trips DESC, Id
+-- END OF 15. --
+
+-- 16. --
+SELECT atr.TripId, SUM(atr.Luggage) [Luggage], 
+	CASE
+		WHEN SUM(atr.Luggage) > 5 THEN CONCAT('$', (SUM(atr.Luggage) * 5))
+		ELSE '$0'
+	END [Fee]
+FROM AccountsTrips [atr]
+	JOIN Trips [t] ON t.Id = atr.TripId AND atr.Luggage > 0
+GROUP BY atr.TripId
+ORDER BY SUM(atr.Luggage) DESC
+-- END OF 16. --
+
+-- 17. --
+SELECT atr.TripId
+	, CONCAT(A.FirstName, ' ' + A.MiddleName, ' ', A.LastName) [Full Name]
+	, ac.Name [From]
+	, c.Name [To]
+	, CASE
+		WHEN t.CancelDate IS NULL THEN CONCAT(DATEDIFF(DAY, t.ArrivalDate, t.ReturnDate), ' ', 'days')
+		ELSE 'Canceled'
+	  END [Duration]
+FROM AccountsTrips [atr] 
+	JOIN Accounts [a] ON a.Id = atr.AccountId
+	JOIN Trips [t] ON t.Id = atr.TripId
+	JOIN Rooms [r] ON r.Id = t.RoomId
+	JOIN Hotels [h] ON h.Id = r.HotelId
+	JOIN Cities [c] ON c.Id = h.CityId
+	JOIN Cities [ac] ON ac.Id = a.CityId
+ORDER BY [Full Name], atr.TripId
+-- END OF 17. --
+GO
+-- 18. --
+CREATE FUNCTION udf_GetAvailableRoom(@HotelId INT, @Date DATETIME, @People INT)
+RETURNS VARCHAR(MAX) AS
+BEGIN
+	DECLARE @BookedRooms TABLE (Id INT);
+	INSERT INTO @BookedRooms
+		SELECT r.Id
+		FROM Rooms [r]
+			JOIN Trips [t] ON t.RoomId = r.Id
+		WHERE R.HotelId = @HotelId AND @Date BETWEEN T.ArrivalDate AND T.ReturnDate AND T.CancelDate IS NULL
+		
+	DECLARE @Rooms TABLE(Id INT, Price DECIMAL(15, 2), Type VARCHAR(20), Beds INT, TotalPrice DECIMAL(15, 2))
+    INSERT INTO @Rooms
+      SELECT TOP 1
+        R.Id,
+        R.Price,
+        R.Type,
+        R.Beds,
+        @People * (H.BaseRate + R.Price) AS TotalPrice
+      FROM Rooms R
+        LEFT JOIN Hotels H on R.HotelId = H.Id
+      WHERE
+        R.HotelId = @HotelId AND
+        R.Beds >= @People AND
+        R.Id NOT IN (SELECT Id
+                     FROM @BookedRooms)
+      ORDER BY TotalPrice DESC
+
+    DECLARE @RoomCount INT = (SELECT COUNT(*)
+                              FROM @Rooms)
+    IF (@RoomCount < 1)
+      BEGIN
+        RETURN 'No rooms available'
+      END
+
+    DECLARE @Result VARCHAR(MAX) = (SELECT CONCAT('Room ', Id, ': ', Type, ' (', Beds, ' beds) - ', '$', TotalPrice)
+                                    FROM @Rooms)
+
+    RETURN @Result
+END
+
+SELECT dbo.udf_GetAvailableRoom(112, '2011-12-17', 2)
+-- END OF 18. --
+

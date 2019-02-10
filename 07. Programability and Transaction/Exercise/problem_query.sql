@@ -93,22 +93,84 @@ EXEC usp_EmployeesBySalaryLevel 'High'
 GO
 -- END --
 
-CREATE OR ALTER FUNCTION ufn_IsWordComprised(@setOfLetters VARCHAR(50), @word VARCHAR(50))
+-- Problem 07.
+CREATE OR ALTER FUNCTION ufn_IsWordComprised(@setOfLetters VARCHAR(MAX), @word VARCHAR(MAX))
 RETURNS BIT
 BEGIN
-    DECLARE @myBool BIT;
+	DECLARE @doesContain BIT = 1;
+	DECLARE @index INT = 1;
+	
+	WHILE(@index < LEN(@word))
+	BEGIN
+		DECLARE @currentChar CHAR(1) = SUBSTRING(@word, @index, 1);
+		DECLARE @indexOfFoundChar INT = CHARINDEX(@currentChar, @setOfLetters, 1)
 
-    IF(1 = 1)
-    BEGIN
-      SET @myBool = 1
-    END	
+		IF (@indexOfFoundChar = 0)
+		BEGIN
+			SET @doesContain = 0;
+			BREAK;
+		END
 
-    ELSE
-    BEGIN
-      SET @myBool = 0;
-    END
+		SET @index += 1;
+	END
 
-    RETURN @myBool;
-
+	RETURN @doesContain;
 END
 GO
+
+SELECT dbo.ufn_IsWordComprised('asd', 'deff')
+GO
+-- END --
+
+-- Problem 08.
+CREATE PROC usp_DeleteEmployeesFromDepartment (@departmentId INT)
+AS
+	ALTER TABLE Departments
+	ALTER COLUMN ManagerId INT
+
+	DELETE FROM EmployeesProjects WHERE EmployeeID IN(
+		SELECT EmployeeID FROM Employees WHERE DepartmentID = @departmentId
+	)
+
+	-- FUCK THIS PROBLEM IN PARTICULAR
+
+	UPDATE Departments
+	SET ManagerID = NULL
+	WHERE DepartmentID = @departmentId;
+
+	UPDATE Employees
+	SET ManagerID = NULL
+	WHERE ManagerID IN (SELECT EmployeeID FROM Employees WHERE DepartmentID = @departmentId)
+
+	DELETE FROM Employees
+	WHERE DepartmentID = @departmentId
+	
+	DELETE FROM Departments
+	WHERE DepartmentID = @departmentId
+
+	SELECT COUNT(*) FROM Employees WHERE DepartmentID = @departmentId
+GO
+-- END --
+
+USE Bank
+GO
+-- 09. --
+CREATE PROC usp_GetHoldersFullName
+AS
+	SELECT CONCAT(FirstName, ' ' + LastName) [Full Name] FROM AccountHolders
+GO
+-- END --
+
+-- 10. --
+CREATE OR ALTER PROC usp_GetHoldersWithBalanceHigherThan(@moreThanMoney DECIMAL(15,2))
+AS
+	SELECT FirstName, LastName
+	FROM (
+		SELECT FirstName, LastName, SUM(a.Balance) [Sum]
+		FROM AccountHolders [ah]
+			JOIN Accounts [a] ON a.AccountHolderId = ah.Id
+		GROUP BY ah.Id, FirstName, LastName) [t]
+	WHERE [Sum] > @moreThanMoney
+	ORDER BY FirstName, LastName
+
+EXEC usp_GetHoldersWithBalanceHigherThan 10000

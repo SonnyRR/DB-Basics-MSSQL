@@ -258,9 +258,10 @@ FROM AccountsTrips [atr]
 ORDER BY [Full Name], atr.TripId
 -- END OF 17. --
 GO
+
 -- 18. --
 CREATE FUNCTION udf_GetAvailableRoom(@HotelId INT, @Date DATETIME, @People INT)
-  RETURNS VARCHAR(MAX) AS
+RETURNS VARCHAR(MAX)
 BEGIN
   DECLARE @BookedRooms TABLE
                        (
@@ -308,7 +309,8 @@ BEGIN
 
   RETURN @Result
 END
+GO
 
-SELECT dbo.udf_GetAvailableRoom(112, '2011-12-17', 2)
+--SELECT dbo.udf_GetAvailableRoom(112, '2011-12-17', 2)
 -- END OF 18. --
-
+GO

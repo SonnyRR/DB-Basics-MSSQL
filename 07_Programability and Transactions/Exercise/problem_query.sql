@@ -174,13 +174,47 @@ AS
 	ORDER BY FirstName, LastName
 
 EXEC usp_GetHoldersWithBalanceHigherThan 10000
-
 -- 11. --
-CREATE FUNCTION ufn_CalculateFutureValue(@sum DECIMAL(15,2), @yearlyInterestRate FLOAT, @numberOfYears INT)
+GO
+CREATE OR ALTER FUNCTION ufn_CalculateFutureValue(@sum DECIMAL(15,2), @yearlyInterestRate FLOAT, @numberOfYears INT)
 RETURNS DECIMAL(15,4)
 BEGIN
 		DECLARE @result DECIMAL(15,4) = @sum * (POWER(1 + @yearlyInterestRate, @numberOfYears));
 		RETURN @result
 END
+GO
+-- END --
 
-SELECT EXEC dbo.ufn_CalculateFutureValue 1000, 0.1, 5
+-- 12. --
+CREATE OR ALTER PROC usp_CalculateFutureValueForAccount(@accountId INT, @interestRate DECIMAL(15,2))
+AS
+	SELECT TOP (1) ac.Id [Account Id]
+		,ac.FirstName [First Name]
+		,ac.LastName [Last Name]
+		,a.Balance [Current Balance]
+		,dbo.ufn_CalculateFutureValue(a.Balance, @interestRate, 5) [Balance in 5 years]
+	FROM AccountHolders [ac]
+		JOIN Accounts [a] ON a.AccountHolderId = ac.Id AND ac.Id = @accountId;
+GO
+
+EXEC usp_CalculateFutureValueForAccount 1, 0.1
+-- END --
+
+USE Diablo
+-- 13. --
+GO
+CREATE OR ALTER FUNCTION ufn_CashInUsersGames(@gameName VARCHAR(MAX))
+RETURNS TABLE AS
+RETURN
+	
+	SELECT SUM(Cash) [Cash] FROM
+	(SELECT u.Username, ug.Cash, ROW_NUMBER() OVER (ORDER BY ug.Cash DESC) [row], g.Name [GameName]
+	FROM Users [u]
+		JOIN UsersGames [ug] ON ug.UserId = u.Id
+		JOIN Games [g] ON g.Id = ug.GameId AND g.Name = @gameName) [tmptb]
+	WHERE row % 2 <> 0
+	GROUP BY GameName
+GO
+SELECT * FROM dbo.ufn_CashInUsersGames ('Amsterdam')
+-- END --
+

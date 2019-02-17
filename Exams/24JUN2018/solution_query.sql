@@ -1,5 +1,3 @@
---DROP DATABASE TripService
-
 -- DDL --
 CREATE DATABASE TripService
 GO
@@ -261,7 +259,7 @@ GO
 
 -- 18. --
 CREATE FUNCTION udf_GetAvailableRoom(@HotelId INT, @Date DATETIME, @People INT)
-RETURNS VARCHAR(MAX)
+  RETURNS VARCHAR(MAX)
 BEGIN
   DECLARE @BookedRooms TABLE
                        (

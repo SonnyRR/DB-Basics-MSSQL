@@ -1,9 +1,12 @@
 -- Problem 01.
 CREATE DATABASE Minions
+GO
 -- End --
 
 -- Problem 02.
 USE Minions
+GO
+
 CREATE TABLE Minions
 (
   Id   INT PRIMARY KEY IDENTITY,
@@ -16,19 +19,24 @@ CREATE TABLE Towns
   Id   INT PRIMARY KEY IDENTITY,
   Name NVARCHAR(30),
 )
+GO
 -- END --
 
 -- Problem 03.
 USE Minions
+GO
 
 ALTER TABLE Minions
   ADD TownId INT
 ALTER TABLE Minions
   ADD CONSTRAINT TownId FOREIGN KEY (Id) REFERENCES Towns (Id)
+GO
 -- END -- 
 
 -- Problem 04.
 USE Minions
+GO
+
 INSERT INTO Towns (Name)
 VALUES ('Sofia'),
        ('Plovdiv'),
@@ -38,20 +46,28 @@ INSERT INTO Minions (Name, Age, TownId)
 VALUES ('Kevin', 22, 1),
        ('Bob', 15, 3),
        ('Kevin', NULL, 2)
+GO
 -- END --
 
 -- Problem 05.
 USE Minions
+GO
+
 TRUNCATE TABLE Minions
+GO
 -- END --
 
 -- Problem 06.
 USE master
+GO
+
 DROP TABLE Minions
 DROP TABLE Towns
-
+GO
 -- Problem 07.
+
 USE Minions
+GO
 
 CREATE TABLE People
 (
@@ -71,13 +87,13 @@ VALUES ('Pesho', 21412, 1.80, 90.4, 'm', '07-07-1997', 'something'),
        ('Lilly', 233312, 1.68, 62.5, 'f', '07-07-1997', '2something'),
        ('Gosho', 1412, 1.75, 80.4, 'f', '07-07-1997', '3something'),
        ('IDK', NULL, 1.99, 111.2, 'm', '07-07-1997', '4something')
-
+GO
 -- END -- 
 
 -- Problem 08.
 USE Minions
+GO
 
--- DROP TABLE Users
 CREATE TABLE Users
 (
   Id            INT IDENTITY,
@@ -94,10 +110,12 @@ VALUES ('uname1', 'xas14444', 323, '02-01-2019', 0),
        ('uname3', 'test1243', NULL, NULL, 1),
        ('uname4', 'testtt', 666, '02-01-2019', 1),
        ('uname5', '000000', 200, NULL, 0)
+GO
 -- END --
 
 -- Problem 13.
 USE Minions
+GO
 
 CREATE TABLE Directors
 (
@@ -119,9 +137,6 @@ CREATE TABLE Categories
   Name  NVARCHAR(20) NOT NULL,
   Notes NVARCHAR(100)
 )
-
---TRUNCATE TABLE Categories
--- DROP TABLE Movies
 
 CREATE TABLE Movies
 (
@@ -164,12 +179,18 @@ VALUES ('Movie1', 2, '1994', 130, 1, 2, 4, 'sample description'),
        ('Movie3', 2, '2013', 120, 3, 1, 4, 'sample description'),
        ('Movie4', 2, '1996', 60, 4, 4, 4, 'sample description'),
        ('Movie5', 2, '1990', 130, 5, 5, 4, 'sample description')
+GO
 -- END --
 
 -- Problem 14.
 DROP DATABASE Minions
+GO
+
 CREATE DATABASE CarRental
+GO
+
 USE CarRental
+GO
 
 CREATE TABLE Categories
 (
@@ -184,20 +205,16 @@ CREATE TABLE Categories
 CREATE TABLE Cars
 (
   Id           INT PRIMARY KEY IDENTITY,
-  Plate        NVARCHAR(8)                                                 NOT NULL,
-  Manufacturer VARCHAR(20)                                                 NOT NULL,
-  Model        VARCHAR(20)                                                 NOT NULL,
-  Year         DATETIME                                                    NOT NULL,
-  CategoryId   INT FOREIGN KEY (CategoryId) REFERENCES Categories (Id) NOT NULL,
-  Doors        INT                                                         NOT NULL,
+  Plate        NVARCHAR(8) NOT NULL,
+  Manufacturer VARCHAR(20) NOT NULL,
+  Model        VARCHAR(20) NOT NULL,
+  Year         DATETIME    NOT NULL,
+  CategoryId   INT         NOT NULL FOREIGN KEY (CategoryId) REFERENCES Categories (Id),
+  Doors        INT         NOT NULL,
   Picture      VARBINARY(6000),
   Condition    NVARCHAR(1000),
-  Available    BIT                                                         NOT NULL,
+  Available    BIT         NOT NULL,
 )
-
---ALTER TABLE Cars DROP CONSTRAINT FK__Cars__CategoryId__2739D489
---ALTER TABLE Cars ADD CONSTRAINT FK_Cars_CategoryId_Categories FOREIGN KEY (CategoryId) REFERENCES Categories(Id)
---TRUNCATE TABLE Categories
 
 CREATE TABLE Customers
 (
@@ -267,14 +284,18 @@ INSERT INTO RentalOrders(EmployeeId, CustomerId, CarId, TankLevel, KilometrageSt
 VALUES (1, 1, 1, 40, 220.43, 290.11, 14131.13, '07-01-2019', '09-01-2019', 2, 2.3, 1.1, 'Done', 'SomeText'),
        (2, 2, 2, 100, 222, 333, 4444, '02-01-2019', '07-01-2019', 5, 2, 2, 'Done', NULL),
        (3, 3, 3, 60, 444, 888, 34444, '03-01-2019', '11-01-2019', 8, 2, 2, 'Done', NULL)
-
+GO
 -- END --
 
 -- Problem 15.
 DROP DATABASE CarRental
+GO
+
 CREATE DATABASE HotelDB
+GO
+
 USE HotelDB
---DROP DATABASE HotelDB
+GO
 
 CREATE TABLE Employees
 (
@@ -428,8 +449,6 @@ CREATE TABLE Addresses
     CONSTRAINT FK_Addresses_Towns FOREIGN KEY (AddressId) REFERENCES Towns (Id)
 )
 
--- ALTER TABLE Addresses ALTER COLUMN AddressId INT NOT NULL
-
 CREATE TABLE Departments
 (
   Id   INT PRIMARY KEY IDENTITY,
@@ -450,6 +469,7 @@ CREATE TABLE Employees
   AddressId    INT
     CONSTRAINT FK_Employees_Addresses FOREIGN KEY (AddressId) REFERENCES Addresses (Id)
 )
+GO
 -- END --
 
 -- Problem 18.
@@ -479,6 +499,7 @@ VALUES ('Ivan', 'Ivanov', 'Ivanov', '.NET Developer', 4, '01/02/2013', 3500),
        ('Maria', 'Petrova', 'Ivanova', 'Intern', 5, '08/08/2016', 525.25),
        ('Gorgi', 'Terziev', 'Ivanov', 'CEO', 2, '09/12/2007', 3000),
        ('Peter', 'Pan', 'Pan', 'Intern', 3, '11/08/2016', 599.88)
+GO
 -- END --
 
 -- Problem 19.
@@ -530,16 +551,19 @@ FROM Employees
 
 -- Problem 23.
 USE HotelDB
+GO
 
 UPDATE Payments
 SET TaxRate = TaxRate * 0.97
 
 SELECT TaxRate
 FROM Payments
+GO
 -- END --
 
 -- Problem 24.
 TRUNCATE TABLE Occupancies
+GO
 -- END --
 
 USE master

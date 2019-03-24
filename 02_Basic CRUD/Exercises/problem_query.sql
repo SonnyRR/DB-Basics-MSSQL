@@ -1,4 +1,5 @@
 USE SoftUni
+GO
 -- Problem 01.
 SELECT *
 FROM Departments
@@ -56,7 +57,7 @@ WHERE Salary IN (25000, 14000, 12500, 23600)
 -- Problem 11.
 SELECT FirstName, LastName
 FROM Employees
-WHERE ManagerID IS NULL --?
+WHERE ManagerID IS NULL
 -- END --
 
 -- Problem 12.

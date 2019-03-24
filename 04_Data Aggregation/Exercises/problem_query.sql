@@ -127,16 +127,21 @@ WHERE DepartmentID IN (2, 5, 7)
 GROUP BY DepartmentID;
 
 -- Problem 15.
---DROP TABLE NewTB
 SELECT * INTO NewTB
 FROM Employees
 WHERE Salary > 30000;
+GO
+
 DELETE
 FROM NewTB
 WHERE ManagerID = 42;
+GO
+
 UPDATE NewTB
 SET Salary+=5000
 WHERE DepartmentID = 1;
+GO
+
 SELECT DepartmentID,
        AVG(Salary)
 FROM NewTB
@@ -156,6 +161,7 @@ WHERE ManagerID IS NULL;
 
 -- Problem 18.
 USE SoftUni
+GO
 
 SELECT DepartmentID, Salary
 FROM (
@@ -166,10 +172,9 @@ FROM (
 WHERE Rank = 3
 GROUP BY DepartmentID, Salary
 
--- END --
 
 -- Problem 19.
-SELECT TOP (10) FirstName,LastName, k.DepartmentID
+SELECT TOP (10) FirstName, LastName, k.DepartmentID
 FROM Employees AS [k]
        JOIN
      (SELECT DepartmentID, AVG(Salary) AS [Avg]

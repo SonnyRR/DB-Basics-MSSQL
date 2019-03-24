@@ -1,4 +1,5 @@
 USE SoftUni
+GO
 
 -- Problem 01.
 SELECT TOP (5) e.EmployeeID, e.JobTitle, e.AddressID, a.AddressText
@@ -124,8 +125,8 @@ ORDER BY c.CountryName ASC
 -- END --
 
 -- Problem 15.
-SELECT ContinentCode, CurrencyCode, CurrencyUsage FROM(SELECT ContinentCode, 
-	   CurrencyCode, 
+SELECT ContinentCode, CurrencyCode, CurrencyUsage FROM(SELECT ContinentCode,
+	   CurrencyCode,
 	   COUNT(CurrencyCode)[CurrencyUsage],
 	   DENSE_RANK() OVER (PARTITION BY ContinentCode ORDER BY COUNT(CurrencyCode) DESC) [Rank]
 FROM Countries
@@ -159,7 +160,7 @@ ORDER BY PeakElevation DESC, RiverLength DESC, CountryName ASC
 SELECT TOP (5) CountryName
 	,[Highest Peak Name]
 	,[Highest Peak Elevation]
-	,[Mountain] 
+	,[Mountain]
 FROM (SELECT c.CountryName
 		,CASE
 			WHEN p.PeakName IS NULL THEN '(no highest peak)'
@@ -167,7 +168,7 @@ FROM (SELECT c.CountryName
 			END AS [Highest Peak Name]
 		,CASE
 			WHEN MAX(p.Elevation) IS NULL THEN '0'
-			ELSE MAX(p.Elevation) 
+			ELSE MAX(p.Elevation)
 			END AS [Highest Peak Elevation]
 		,CASE
 			WHEN m.MountainRange IS NULL THEN '(no mountain)'

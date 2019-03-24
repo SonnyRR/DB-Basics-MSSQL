@@ -1,4 +1,5 @@
 USE SoftUni;
+GO
 
 -- Problem 01.
 SELECT FirstName,
@@ -59,6 +60,7 @@ SELECT FirstName,
 FROM Employees
 WHERE YEAR(HireDate) > YEAR('2000-01-01');
 GO
+
 SELECT *
 FROM v_EmployeesHiredAfter2000
 -- END --

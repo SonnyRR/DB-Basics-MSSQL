@@ -1,6 +1,8 @@
 CREATE DATABASE TableRelations
+GO
 
 USE TableRelations
+GO
 
 -- Problem 01.
 CREATE TABLE Passports
@@ -27,6 +29,7 @@ INSERT INTO Persons(FirstName, Salary, PassportID)
 VALUES ('Roberto', 43300, 102),
        ('Tom', 56100, 103),
        ('Yana', 60200, 101)
+GO
 -- END --
 
 -- Problem 02.
@@ -98,6 +101,7 @@ VALUES (1, 101),
        (3, 103),
        (2, 102),
        (2, 103)
+GO
 -- END --
 
 -- Problem 04.
@@ -116,12 +120,13 @@ VALUES ('John', NULL),
        ('Ted', 105),
        ('Mark', 101),
        ('Greta', 101)
-
+GO
 -- END --
 
 -- Problem 09.
-SELECT MountainRange, PeakName, Elevation FROM Mountains
-LEFT JOIN Peaks ON MountainId = Mountains.Id
+SELECT MountainRange, PeakName, Elevation
+FROM Mountains
+       LEFT JOIN Peaks ON MountainId = Mountains.Id
 WHERE MountainRange = 'Rila'
 ORDER BY Elevation DESC
 -- END --

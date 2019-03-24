@@ -85,7 +85,7 @@ GO
 CREATE OR ALTER PROC usp_EmployeesBySalaryLevel(@level VARCHAR(10))
 AS
 SELECT FirstName
-     ,LastName
+     , LastName
 FROM Employees
 WHERE dbo.ufn_GetSalaryLevel(Salary) = @level
 GO
@@ -194,11 +194,11 @@ GO
 -- 12. --
 CREATE OR ALTER PROC usp_CalculateFutureValueForAccount(@accountId INT, @interestRate DECIMAL(15, 2))
 AS
-SELECT TOP (1) ac.Id                                                    [Account Id]
-             ,ac.FirstName                                              [First Name]
-             ,ac.LastName                                               [Last Name]
-             ,a.Balance                                                 [Current Balance]
-             ,dbo.ufn_CalculateFutureValue(a.Balance, @interestRate, 5) [Balance in 5 years]
+SELECT TOP (1) ac.Id                                                     [Account Id]
+             , ac.FirstName                                              [First Name]
+             , ac.LastName                                               [Last Name]
+             , a.Balance                                                 [Current Balance]
+             , dbo.ufn_CalculateFutureValue(a.Balance, @interestRate, 5) [Balance in 5 years]
 FROM AccountHolders [ac]
        JOIN Accounts [a] ON a.AccountHolderId = ac.Id AND ac.Id = @accountId;
 GO
@@ -207,6 +207,7 @@ EXEC usp_CalculateFutureValueForAccount 1, 0.1
 -- END --
 
 USE Diablo
+GO
 -- 13. --
 GO
 CREATE OR ALTER FUNCTION ufn_CashInUsersGames(@gameName VARCHAR(MAX))
@@ -225,227 +226,256 @@ FROM dbo.ufn_CashInUsersGames('Amsterdam')
 -- END --
 
 USE Bank
+GO
 -- 14. --
 CREATE TABLE Logs
 (
-  LogId INT PRIMARY KEY IDENTITY,
-  AccountId INT NOT NULL,
-  OldSum DECIMAL(15,2) NOT NULL,
-  NewSum DECIMAL(15,2) NOT NULL
+  LogId     INT PRIMARY KEY IDENTITY,
+  AccountId INT            NOT NULL,
+  OldSum    DECIMAL(15, 2) NOT NULL,
+  NewSum    DECIMAL(15, 2) NOT NULL
 )
 GO
 
-CREATE OR ALTER TRIGGER tr_TableLogs ON Accounts INSTEAD OF UPDATE
-AS
-	BEGIN
-		INSERT INTO Logs SELECT a.Id, a.Balance, i.Balance FROM inserted [i]
-							JOIN Accounts [a] ON a.Id = i.Id
-	END
+CREATE OR ALTER TRIGGER tr_TableLogs
+  ON Accounts
+  INSTEAD OF UPDATE
+  AS
+BEGIN
+  INSERT INTO Logs
+  SELECT a.Id, a.Balance, i.Balance
+  FROM inserted [i]
+         JOIN Accounts [a] ON a.Id = i.Id
+END
 
 UPDATE Accounts
 SET Balance += 4
 WHERE Id = 2
 
-SELECT * FROM Logs
-SELECT * FROM Accounts
+SELECT *
+FROM Logs
+
+SELECT *
+FROM Accounts
 -- END --
 
 -- 15. --
 CREATE TABLE NotificationEmails
 (
-	Id INT PRIMARY KEY IDENTITY,
-	Recipient INT NOT NULL,
-	[Subject] VARCHAR(100), 
-	Body VARCHAR(100)
+  Id        INT PRIMARY KEY IDENTITY,
+  Recipient INT NOT NULL,
+  [Subject] VARCHAR(100),
+  Body      VARCHAR(100)
 )
 GO
 
-CREATE OR ALTER TRIGGER tr_Emails ON Logs FOR INSERT
-AS
-	BEGIN
-		DECLARE @recipient INT = (SELECT TOP (1) i.AccountId FROM inserted [i]);
-		DECLARE @sumBeforeTransaction DECIMAL(15,2) = (SELECT TOP (1) i.OldSum FROM inserted [i]);
-		DECLARE @sumAfterTransaction DECIMAL(15,2) = (SELECT TOP (1) i.NewSum FROM inserted [i]);
-		DECLARE @dateOfChange DATETIME2 = GETDATE();
+CREATE OR ALTER TRIGGER tr_Emails
+  ON Logs
+  FOR INSERT
+  AS
+BEGIN
+  DECLARE @recipient INT = (SELECT TOP (1) i.AccountId FROM inserted [i]);
+  DECLARE @sumBeforeTransaction DECIMAL(15, 2) = (SELECT TOP (1) i.OldSum FROM inserted [i]);
+  DECLARE @sumAfterTransaction DECIMAL(15, 2) = (SELECT TOP (1) i.NewSum FROM inserted [i]);
+  DECLARE @dateOfChange DATETIME2 = GETDATE();
 
-		INSERT INTO NotificationEmails
-		VALUES (@recipient, CONCAT('Balance change for account: ', @recipient), 
-				CONCAT('On ', FORMAT(@dateOfChange, 'MMM dd yyyy hh:mmtt'), ' your balance was changed from ', @sumBeforeTransaction, ' to ', @sumAfterTransaction))
-	END
+  INSERT INTO NotificationEmails
+  VALUES (@recipient, CONCAT('Balance change for account: ', @recipient),
+          CONCAT('On ', FORMAT(@dateOfChange, 'MMM dd yyyy hh:mmtt'), ' your balance was changed from ',
+                 @sumBeforeTransaction, ' to ', @sumAfterTransaction))
+END
 -- END --
 GO
 
 
 -- 16. --
-CREATE OR ALTER PROC usp_DepositMoney (@AccountId INT, @MoneyAmount DECIMAL(15,4))
+CREATE OR ALTER PROC usp_DepositMoney(@AccountId INT, @MoneyAmount DECIMAL(15, 4))
 AS
-	BEGIN TRANSACTION
+BEGIN TRANSACTION
 
-		IF(EXISTS(SELECT * FROM Accounts WHERE Id = @AccountId))
-		BEGIN
-			IF(@MoneyAmount <= 0)
-			BEGIN
-				ROLLBACK;
-				RETURN;
-			END
-			
-			UPDATE Accounts
-			SET Balance += @MoneyAmount
-			WHERE Id = @AccountId
-		END
+IF (EXISTS(SELECT *
+           FROM Accounts
+           WHERE Id = @AccountId))
+  BEGIN
+    IF (@MoneyAmount <= 0)
+      BEGIN
+        ROLLBACK;
+        RETURN;
+      END
 
-		ELSE
-		BEGIN
-			ROLLBACK;
-			RETURN;
-		END
-	
-	COMMIT		
+    UPDATE Accounts
+    SET Balance += @MoneyAmount
+    WHERE Id = @AccountId
+  END
+
+ELSE
+  BEGIN
+    ROLLBACK;
+    RETURN;
+  END
+
+COMMIT
 
 GO
 -- END --
 
 -- 17. --
-CREATE OR ALTER PROC usp_WithdrawMoney (@accountId INT, @moneyAmount DECIMAL(15,4))
+CREATE OR ALTER PROC usp_WithdrawMoney(@accountId INT, @moneyAmount DECIMAL(15, 4))
 AS
-	BEGIN TRANSACTION
-		UPDATE Accounts 
-		SET Balance = Balance - @moneyAmount
-		WHERE Id = @accountId
-		
-		IF @@ROWCOUNT <> 1
-		BEGIN
-			ROLLBACK;
-			RETURN;
-		END
-	COMMIT
+BEGIN TRANSACTION
+UPDATE Accounts
+SET Balance = Balance - @moneyAmount
+WHERE Id = @accountId
+
+IF @@ROWCOUNT <> 1
+  BEGIN
+    ROLLBACK;
+    RETURN;
+  END
+COMMIT
 GO
 -- END --
 
 -- 18. --
-CREATE OR ALTER PROC usp_TransferMoney(@SenderId INT, @ReceiverId INT, @Amount DECIMAL(15,4))
+CREATE OR ALTER PROC usp_TransferMoney(@SenderId INT, @ReceiverId INT, @Amount DECIMAL(15, 4))
 AS
-	BEGIN TRANSACTION
-		
-		IF (@Amount <= 0)
-		BEGIN
-			ROLLBACK
-		END
+BEGIN TRANSACTION
 
-		EXEC usp_WithdrawMoney @SenderId, @Amount;
-		EXEC usp_DepositMoney @ReceiverId, @Amount;
+IF (@Amount <= 0)
+  BEGIN
+    ROLLBACK
+  END
 
-	COMMIT
+EXEC usp_WithdrawMoney @SenderId, @Amount;
+EXEC usp_DepositMoney @ReceiverId, @Amount;
+
+COMMIT
 GO
 -- END --
 
 -- 20. --
-DECLARE @stamatCash DECIMAL(15,2)
-	= (SELECT Cash 
-	   FROM Users [u]
-			JOIN UsersGames [ug] ON ug.UserId = u.Id AND ug.GameId = 87 AND u.Id = 9)
+DECLARE @stamatCash DECIMAL(15, 2)
+  = (SELECT Cash
+     FROM Users [u]
+            JOIN UsersGames [ug] ON ug.UserId = u.Id AND ug.GameId = 87 AND u.Id = 9)
 
-DECLARE @itemsPrice DECIMAL(15,2)
-	= (SELECT SUM(Price) FROM Items WHERE MinLevel BETWEEN 11 AND 12)
+DECLARE @itemsPrice DECIMAL(15, 2)
+  = (SELECT SUM(Price)
+     FROM Items
+     WHERE MinLevel BETWEEN 11 AND 12)
 
 BEGIN TRANSACTION
-	IF(@stamatCash >= @itemsPrice)
-	BEGIN
-		UPDATE UsersGames
-		SET Cash -= @itemsPrice
-		WHERE UserId = 9 AND GameId = 87
+  IF (@stamatCash >= @itemsPrice)
+    BEGIN
+      UPDATE UsersGames
+      SET Cash -= @itemsPrice
+      WHERE UserId = 9
+        AND GameId = 87
 
-		INSERT INTO UserGameItems
-		SELECT Id, 87 FROM Items WHERE MinLevel BETWEEN 11 AND 12
-	END
+      INSERT INTO UserGameItems
+      SELECT Id, 87
+      FROM Items
+      WHERE MinLevel BETWEEN 11 AND 12
+    END
 
-	ELSE
-	BEGIN
-		ROLLBACK
-		RETURN
-	END
+  ELSE
+    BEGIN
+      ROLLBACK
+      RETURN
+    END
 
-SET @stamatCash = (SELECT Cash 
-	   FROM Users [u]
-			JOIN UsersGames [ug] ON ug.UserId = u.Id AND ug.GameId = 87 AND u.Id = 9)
+  SET @stamatCash = (SELECT Cash
+                     FROM Users [u]
+                            JOIN UsersGames [ug] ON ug.UserId = u.Id AND ug.GameId = 87 AND u.Id = 9)
 
-SET @itemsPrice = (SELECT SUM(Price) FROM Items WHERE MinLevel BETWEEN 19 AND 21)
+  SET @itemsPrice = (SELECT SUM(Price) FROM Items WHERE MinLevel BETWEEN 19 AND 21)
 
-	IF(@stamatCash >= @itemsPrice)
-	BEGIN
-		UPDATE UsersGames
-		SET Cash -= @itemsPrice
-		WHERE UserId = 9 AND GameId = 87
+  IF (@stamatCash >= @itemsPrice)
+    BEGIN
+      UPDATE UsersGames
+      SET Cash -= @itemsPrice
+      WHERE UserId = 9
+        AND GameId = 87
 
-		INSERT INTO UserGameItems
-		SELECT Id, 87 FROM Items WHERE MinLevel BETWEEN 19 AND 21
-	END
+      INSERT INTO UserGameItems
+      SELECT Id, 87
+      FROM Items
+      WHERE MinLevel BETWEEN 19 AND 21
+    END
 
-	ELSE
-	BEGIN
-		ROLLBACK
-		RETURN
-	END
+  ELSE
+    BEGIN
+      ROLLBACK
+      RETURN
+    END
 COMMIT
 
-SELECT i.Name [Item Name] FROM
-	UserGameItems [ugi]
-		JOIN Items [i] ON i.Id = ugi.ItemId
-		JOIN UsersGames [ug] ON ug.Id = ugi.UserGameId
-		JOIN Users [u] ON u.Id = ug.UserId
-	WHERE u.Id = 9
-ORDER BY [Item Name] 
+SELECT i.Name [Item Name]
+FROM UserGameItems [ugi]
+       JOIN Items [i] ON i.Id = ugi.ItemId
+       JOIN UsersGames [ug] ON ug.Id = ugi.UserGameId
+       JOIN Users [u] ON u.Id = ug.UserId
+WHERE u.Id = 9
+ORDER BY [Item Name]
 -- END --
+
 -- 21. --
 USE SoftUni
 GO
 
 CREATE OR ALTER PROC usp_AssignProject(@emloyeeId INT, @projectID INT)
-AS 
-	BEGIN TRANSACTION
-		
-		DECLARE @employeeProjectsCount INT = (SELECT COUNT(EmployeeID) FROM EmployeesProjects WHERE EmployeeID = @emloyeeId)
-
-		IF (@employeeProjectsCount >= 3)
-		BEGIN
-			ROLLBACK
-			RAISERROR('The employee has too many projects!', 16, 1)
-			RETURN
-		END
-
-		INSERT INTO EmployeesProjects
-		VALUES (@emloyeeId, @projectID)
-	COMMIT
--- END --
-
--- 22. --
-CREATE TABLE Deleted_Employees
-(
-	EmployeeId INT PRIMARY KEY IDENTITY, 
-	FirstName VARCHAR(30) NOT NULL, 
-	LastName VARCHAR(30) NOT NULL,
-	MiddleName VARCHAR(30), 
-	JobTitle VARCHAR(50), 
-	DepartmentId INT NOT NULL, 
-	Salary DECIMAL(15,2) NOT NULL
-) 
-GO
-
-CREATE OR ALTER TRIGGER tr_DeletedEmp ON Employees FOR DELETE
 AS
-	BEGIN
-		INSERT INTO Deleted_Employees
-		SELECT  FirstName,
-				LastName, 
-				MiddleName,
-				JobTitle,
-				DepartmentID,
-				Salary
-		FROM deleted		
-	END
+BEGIN TRANSACTION
+
+DECLARE @employeeProjectsCount INT = (SELECT COUNT(EmployeeID)
+                                      FROM EmployeesProjects
+                                      WHERE EmployeeID = @emloyeeId)
+
+IF (@employeeProjectsCount >= 3)
+  BEGIN
+    ROLLBACK
+    RAISERROR ('The employee has too many projects!', 16, 1)
+    RETURN
+  END
+
+INSERT INTO EmployeesProjects
+VALUES (@emloyeeId, @projectID)
+COMMIT
+  -- END --
+
+  -- 22. --
+  CREATE TABLE Deleted_Employees
+  (
+    EmployeeId   INT PRIMARY KEY IDENTITY,
+    FirstName    VARCHAR(30)    NOT NULL,
+    LastName     VARCHAR(30)    NOT NULL,
+    MiddleName   VARCHAR(30),
+    JobTitle     VARCHAR(50),
+    DepartmentId INT            NOT NULL,
+    Salary       DECIMAL(15, 2) NOT NULL
+  )
 GO
 
-DELETE FROM Employees WHERE EmployeeID = 3
-SELECT * FROM Deleted_Employees
+CREATE OR ALTER TRIGGER tr_DeletedEmp
+  ON Employees
+  FOR DELETE
+  AS
+BEGIN
+  INSERT INTO Deleted_Employees
+  SELECT FirstName,
+         LastName,
+         MiddleName,
+         JobTitle,
+         DepartmentID,
+         Salary
+  FROM deleted
+END
+GO
+
+DELETE
+FROM Employees
+WHERE EmployeeID = 3
+SELECT *
+FROM Deleted_Employees
 
 -- END --

@@ -1,3 +1,7 @@
+<!--
+  Title: C# Databases Basics (MSSQL Server & T-SQL) (January 2019)
+  Author: Vasil Kotsev
+  -->
 # SoftUni - C# Databases Basics (MSSQL Server & T-SQL) (January 2019) ![copyright](https://i.imgur.com/didc4Tz.png "cc logo")
 
 📖 This is my repo with exercises from C# DB Basics module - January 2019.
